@@ -21,12 +21,6 @@
     }
   ],
   "env": {
-    "GOOGLE_MAPS_API_KEY": "@google_maps_api_key",
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "SolarGainESP32-web/server/index.js": {
-      "maxDuration": 30
-    }
   }
 }
