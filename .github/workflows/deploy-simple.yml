@@ -1,9 +1,7 @@
-name: Deploy to Vercel
+name: Deploy to Vercel (Simple)
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
     branches: [ main, master ]
 
 jobs:
@@ -31,14 +29,15 @@ jobs:
         cd SolarGainESP32-web
         npm test --if-present
         
-    - name: Install Vercel CLI
-      run: npm install --global vercel@latest
-      
-    - name: Pull Vercel Environment Information
-      run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      
-    - name: Build Project Artifacts
-      run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      
-    - name: Deploy Project Artifacts to Vercel
-      run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+    - name: Deploy to Vercel (Manual Token Required)
+      if: ${{ secrets.VERCEL_TOKEN }}
+      run: |
+        npm install --global vercel@latest
+        vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        
+    - name: Skip Deployment (No Token)
+      if: ${{ !secrets.VERCEL_TOKEN }}
+      run: |
+        echo "⚠️  VERCEL_TOKEN not found. Please set up GitHub secrets to enable automatic deployment."
+        echo "📖 See GITHUB_SECRETS_SETUP.md for instructions"
+        echo "🔗 Manual deployment: vercel --prod"
