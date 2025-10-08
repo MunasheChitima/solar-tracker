@@ -1,0 +1,30 @@
+{
+  "wifi": {
+    "ssid": "YOUR_WIFI_SSID_HERE",
+    "password": "YOUR_WIFI_PASSWORD_HERE"
+  },
+  "whatsapp": {
+    "phone_number_id": "1234567890123456",
+    "access_token": "EAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "recipient_number": "+263771234567"
+  },
+  "location": {
+    "name": "Your Location Name",
+    "latitude": -17.7831,
+    "longitude": 31.0909,
+    "elevation": 650,
+    "timezone_offset": 2
+  },
+  "panel": {
+    "tilt": 30,
+    "azimuth": 180
+  },
+  "notifications": {
+    "enabled": true,
+    "hour": 7,
+    "minute": 0
+  },
+  "sleep": {
+    "duration_minutes": 30
+  }
+}

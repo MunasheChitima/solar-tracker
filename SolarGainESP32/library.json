@@ -1,0 +1,41 @@
+{
+  "name": "SolarGainESP32",
+  "version": "2.0.0",
+  "description": "Solar irradiance forecasting system with WhatsApp notifications for ESP32",
+  "keywords": "solar, irradiance, forecast, whatsapp, esp32, tft, display, renewable, energy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/SolarGainESP32.git"
+  },
+  "authors": [
+    {
+      "name": "SolarGainESP32 Contributors",
+      "email": "your.email@example.com",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/yourusername/SolarGainESP32",
+  "dependencies": {
+    "NTPClient": "^3.2.1",
+    "Time": "^1.6.1",
+    "TFT_eSPI": "^2.5.0",
+    "ArduinoJson": "^6.21.0"
+  },
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "examples": [
+    {
+      "name": "Basic Solar Forecast",
+      "base": "src",
+      "files": ["main.cpp"]
+    }
+  ],
+  "export": {
+    "include": [
+      "lib/*",
+      "src/*",
+      "data/*"
+    ]
+  }
+}

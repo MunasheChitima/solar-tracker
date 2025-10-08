@@ -1,0 +1,30 @@
+{
+  "wifi": {
+    "ssid": "Peetar",
+    "password": "244466666"
+  },
+  "whatsapp": {
+    "phone_number_id": "YOUR_WHATSAPP_PHONE_NUMBER_ID",
+    "access_token": "YOUR_WHATSAPP_ACCESS_TOKEN",
+    "recipient_number": "+263XXXXXXXXX"
+  },
+  "location": {
+    "name": "32 George Road, Hatfield, Harare",
+    "latitude": -17.7831,
+    "longitude": 31.0909,
+    "elevation": 650,
+    "timezone_offset": 2
+  },
+  "panel": {
+    "tilt": 30,
+    "azimuth": 180
+  },
+  "notifications": {
+    "enabled": true,
+    "hour": 7,
+    "minute": 0
+  },
+  "sleep": {
+    "duration_minutes": 30
+  }
+}

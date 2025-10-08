@@ -1,0 +1,65 @@
+# PlatformIO
+.pio
+.pioenvs
+.piolibdeps
+.clang_complete
+.gcc-flags.json
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Build files
+*.bin
+*.elf
+*.map
+
+# Backup files
+*.bak
+*.swp
+*~
+
+# Configuration with secrets
+data/config_local.json
+data/secrets.json
+
+# Test outputs
+test_output/
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+
+# Documentation build
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# IDE
+.idea/
+*.iml
+.project
+.cproject
+.settings/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/

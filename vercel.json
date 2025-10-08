@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "SolarGainESP32-web/server/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "SolarGainESP32-web/public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "SolarGainESP32-web/server/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "SolarGainESP32-web/public/$1"
+    }
+  ],
+  "env": {
+    "GOOGLE_MAPS_API_KEY": "@google_maps_api_key",
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "SolarGainESP32-web/server/index.js": {
+      "maxDuration": 30
+    }
+  }
+}

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SolarGain Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="topbar"></div>
+    <header class="header">
+      <div class="container">
+        <h1>SolarGain Dashboard</h1>
+        <p>Hourly irradiance forecast and daily total</p>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="controls">
+        <div class="grid">
+          <label style="grid-column: span 3; position: relative;">
+            Address (start typing and choose)
+            <input id="address" type="text" autocomplete="off" placeholder="e.g. 32 George Road, Hatfield, Harare" />
+            <div id="addrSuggest" class="suggestions" style="display:none;"></div>
+            <small id="addrConfirm" class="muted"></small>
+          </label>
+          <input id="lat" type="hidden" value="-17.7831" />
+          <input id="lon" type="hidden" value="31.0909" />
+          <input id="elev" type="hidden" />
+          <input id="tz" type="hidden" />
+          <label>
+            Panel tilt (°)
+            <input id="tilt" type="number" step="1" value="30" />
+          </label>
+          <label>
+            Panel wattage (W)
+            <input id="panelWatt" type="number" step="1" value="400" />
+          </label>
+          <label>
+            Panel count
+            <input id="panelCount" type="number" step="1" value="1" />
+          </label>
+          <div>
+            <div class="muted" style="margin-bottom:6px;">Panel direction</div>
+            <div id="azBtns" class="az-grid">
+              <button type="button" data-az="0" class="active">N</button>
+              <button type="button" data-az="45">NE</button>
+              <button type="button" data-az="90">E</button>
+              <button type="button" data-az="135">SE</button>
+              <button type="button" data-az="180">S</button>
+              <button type="button" data-az="225">SW</button>
+              <button type="button" data-az="270">W</button>
+              <button type="button" data-az="315">NW</button>
+            </div>
+            <input id="az" type="hidden" value="0" />
+            <small class="muted">Tip: In the southern hemisphere, point North (0°). In the northern hemisphere, point South (180°).</small>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns: repeat(6, 1fr); margin-top: 8px; align-items: end;">
+          <label>
+            Date
+            <input id="date" type="date" />
+          </label>
+          <div style="display:flex; gap:8px; align-items: center;">
+            <button id="runBtn">Compute</button>
+            <button id="csvBtn" title="Download CSV">Export CSV</button>
+            <button id="shareBtn" title="Copy link with current settings">Share Link</button>
+            <label class="muted" style="display:flex; align-items:center; gap:6px; margin:0;">
+              <input id="tableToggle" type="checkbox" /> Show hourly table
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="summary">
+        <div class="card">
+          <h2 id="dateLabel">—</h2>
+          <p class="muted" id="weatherSummary">—</p>
+          <div class="kpi">
+            <div>
+              <div class="kpi-label">Daily Total</div>
+              <div class="kpi-value" id="dailyTotal">0.00 kWh/m²</div>
+            </div>
+            <div>
+              <div class="kpi-label">Your System Today</div>
+              <div class="kpi-value" id="panelTotal">0.00 kWh</div>
+            </div>
+            <div>
+              <div class="kpi-label">Current Temp</div>
+              <div class="kpi-value" id="currentTemp">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Precipitation</div>
+              <div class="kpi-value" id="precipNow">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Humidity</div>
+              <div class="kpi-value" id="humidityNow">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Wind</div>
+              <div class="kpi-value" id="windNow">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Sunrise</div>
+              <div class="kpi-value" id="sunrise">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Sunset</div>
+              <div class="kpi-value" id="sunset">—</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="dailyOutlook">
+        <h3>Next 7 Days</h3>
+        <div id="outlookGrid" class="outlook-grid"></div>
+        <div style="height:8px;"></div>
+        <h4 class="muted" style="margin:6px 0 8px;">Solar forecast</h4>
+        <div id="weeklyGrid" class="weekly-grid"></div>
+      </section>
+
+      <section class="chart card">
+        <canvas id="irrChart" height="140"></canvas>
+      </section>
+
+      <section class="table card" id="hourlyTable" style="display:none;">
+        <table>
+          <thead>
+            <tr><th>Hour</th><th>Irradiance (kWh/m²)</th><th>Temperature (°C)</th><th>Precip (%)</th><th>Wind (km/h)</th><th>Clouds</th></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </section>
+
+      <section class="card" id="equiv">
+        <h3>What can this power?</h3>
+        <p class="muted">Based on your daily kWh/m², here are simple examples.</p>
+        <ul id="equivList"></ul>
+      </section>
+
+      
+
+
+      <section class="card" id="tips">
+        <h3>Installation Tips</h3>
+        <ul>
+          <li>Clean panels monthly for best performance</li>
+          <li>Check for shading from trees or buildings</li>
+          <li>Consider battery storage for night use</li>
+          <li>Monitor actual vs predicted output</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">Made with ☀️ for Harare — SolarGain</div>
+    </footer>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+  </html>
+
+
