@@ -12,6 +12,8 @@ const els = {
   lon: document.getElementById('lon'),
   panelWatt: document.getElementById('panelWatt'),
   panelCount: document.getElementById('panelCount'),
+  batteryAh: document.getElementById('batteryAh'),
+  batteryV: document.getElementById('batteryV'),
   elev: document.getElementById('elev'),
   tz: document.getElementById('tz'),
   tilt: document.getElementById('tilt'),
@@ -22,6 +24,8 @@ const els = {
   date: document.getElementById('date'),
   dateLabel: document.getElementById('dateLabel'),
   dailyTotal: document.getElementById('dailyTotal'),
+  batteryGainAh: document.getElementById('batteryGainAh'),
+  batteryGainPct: document.getElementById('batteryGainPct'),
   sunrise: document.getElementById('sunrise'),
   sunset: document.getElementById('sunset'),
   tableBody: document.getElementById('tableBody')
@@ -315,6 +319,8 @@ async function currentParams() {
   const tilt = Number.isFinite(tiltRaw) ? tiltRaw : 30;
   const az = Number.isFinite(azRaw) ? azRaw : 0;
   const tz = Number.isFinite(tzRaw) ? tzRaw : 0;
+  const batteryAh = Number.isFinite(parseFloat(els.batteryAh?.value)) ? parseFloat(els.batteryAh.value) : 100;
+  const batteryV = Number.isFinite(parseFloat(els.batteryV?.value)) ? parseFloat(els.batteryV.value) : 52.5;
 
   let lat = parseFloat(els.lat?.value || '-17.7831');
   let lon = parseFloat(els.lon?.value || '31.0909');
@@ -352,7 +358,7 @@ async function currentParams() {
   if (els.lat) els.lat.value = String(lat);
   if (els.lon) els.lon.value = String(lon);
   
-  return { lat, lon, elev, tz: tzOffset, tilt, az, date, display, panelWatt, panelCount };
+  return { lat, lon, elev, tz: tzOffset, tilt, az, date, display, panelWatt, panelCount, batteryAh, batteryV };
 }
 
 async function run() {
@@ -519,6 +525,14 @@ async function run() {
     const performanceRatio = 0.8;
     const panelEnergy = res.total * systemKw * performanceRatio;
     safeSetTextContent(document.getElementById('panelTotal'), `${panelEnergy.toFixed(2)} kWh`);
+    // Battery metrics: convert energy (kWh) to Ah at given battery voltage
+    // Ah = (Wh / V) = (kWh * 1000) / V
+    if (Number.isFinite(p.batteryAh) && Number.isFinite(p.batteryV) && p.batteryV > 0) {
+      const gainedAh = (panelEnergy * 1000) / p.batteryV;
+      const pct = Math.max(0, Math.min(100, (gainedAh / p.batteryAh) * 100));
+      safeSetTextContent(document.getElementById('batteryGainAh'), `${gainedAh.toFixed(1)} Ah`);
+      safeSetTextContent(document.getElementById('batteryGainPct'), `${pct.toFixed(0)}%`);
+    }
     safeSetTextContent(els.sunrise, res.sunrise >= 0 ? formatHour(Math.round(res.sunrise)) : '—');
     safeSetTextContent(els.sunset, res.sunset >= 0 ? formatHour(Math.round(res.sunset)) : '—');
 
@@ -709,6 +723,7 @@ async function shareLink() {
     const p = await currentParams();
     const q = new URLSearchParams({
       lat: p.lat, lon: p.lon, elev: p.elev, tz: p.tz, tilt: p.tilt, az: p.az,
+      batAh: p.batteryAh, batV: p.batteryV,
       date: p.date.toISOString().slice(0,10)
     });
     const url = `${location.origin}${location.pathname}?${q.toString()}`;
@@ -739,6 +754,8 @@ function initFromQuery() {
   if (els.tz) els.tz.value = get('tz', els.tz.value);
   if (els.tilt) els.tilt.value = get('tilt', els.tilt.value);
   if (els.az) els.az.value = get('az', els.az.value);
+  if (els.batteryAh) els.batteryAh.value = get('batAh', els.batteryAh.value);
+  if (els.batteryV) els.batteryV.value = get('batV', els.batteryV.value);
   const d = get('date', '');
   if (d && els.date) els.date.value = d;
 }
@@ -956,6 +973,8 @@ function saveSettings() {
     az: els.az?.value,
     panelW: els.panelWatt?.value,
     panelH: els.panelCount?.value,
+    batAh: els.batteryAh?.value,
+    batV: els.batteryV?.value,
     date: els.date?.value,
     table: document.getElementById('tableToggle')?.checked ? 1 : 0
   };
@@ -978,6 +997,8 @@ function restoreSettings() {
     if (d.az && els.az) els.az.value = d.az;
     if (d.panelW && els.panelWatt) els.panelWatt.value = d.panelW;
     if (d.panelH && els.panelCount) els.panelCount.value = d.panelH;
+    if (d.batAh && els.batteryAh) els.batteryAh.value = d.batAh;
+    if (d.batV && els.batteryV) els.batteryV.value = d.batV;
     if (d.date && els.date) els.date.value = d.date;
     const tt = document.getElementById('tableToggle');
     const tableWrap = document.getElementById('hourlyTable');
@@ -989,7 +1010,7 @@ function restoreSettings() {
 }
 
 function wireAutoRun() {
-  const ids = ['date','tilt','az','panelWatt','panelCount'];
+  const ids = ['date','tilt','az','panelWatt','panelCount','batteryAh','batteryV'];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => { saveSettings(); run(); });

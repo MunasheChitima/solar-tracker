@@ -52,6 +52,18 @@
                    aria-describedby="panelCount-help" aria-label="Number of solar panels" />
             <small id="panelCount-help" class="help-text">Total number of solar panels</small>
           </label>
+          <label for="batteryAh">
+            Battery capacity (Ah)
+            <input id="batteryAh" type="number" step="0.1" min="1" max="10000" value="100" 
+                   aria-describedby="batteryAh-help" aria-label="Battery capacity in amp-hours" />
+            <small id="batteryAh-help" class="help-text">e.g., 100 Ah</small>
+          </label>
+          <label for="batteryV">
+            Battery voltage (V)
+            <input id="batteryV" type="number" step="0.1" min="1" max="1000" value="52.5" 
+                   aria-describedby="batteryV-help" aria-label="Nominal battery voltage in volts" />
+            <small id="batteryV-help" class="help-text">e.g., 52.5 V</small>
+          </label>
           <div>
             <div class="muted" style="margin-bottom:6px;">Panel direction</div>
             <div id="azBtns" class="az-grid" role="radiogroup" aria-label="Panel direction selection">
@@ -96,6 +108,14 @@
             <div>
               <div class="kpi-label">Your System Today</div>
               <div class="kpi-value" id="panelTotal">0.00 kWh</div>
+            </div>
+            <div>
+              <div class="kpi-label">Battery Charge Today</div>
+              <div class="kpi-value" id="batteryGainAh">0.0 Ah</div>
+            </div>
+            <div>
+              <div class="kpi-label">Battery % of Capacity</div>
+              <div class="kpi-value" id="batteryGainPct">0%</div>
             </div>
             <div>
               <div class="kpi-label">Current Temp</div>
