@@ -22,55 +22,63 @@
     <main class="container">
       <section class="controls">
         <div class="grid">
-          <label style="grid-column: span 3; position: relative;">
+          <label style="grid-column: span 3; position: relative;" for="address">
             Address (start typing and choose)
-            <input id="address" type="text" autocomplete="off" placeholder="e.g. 32 George Road, Hatfield, Harare" />
-            <div id="addrSuggest" class="suggestions" style="display:none;"></div>
+            <input id="address" type="text" autocomplete="off" placeholder="e.g. 32 George Road, Hatfield, Harare" 
+                   aria-describedby="address-help" aria-label="Enter your location address" />
+            <div id="addrSuggest" class="suggestions" style="display:none;" role="listbox" aria-label="Address suggestions"></div>
             <small id="addrConfirm" class="muted"></small>
+            <small id="address-help" class="help-text">Start typing your address and select from suggestions</small>
           </label>
           <input id="lat" type="hidden" value="-17.7831" />
           <input id="lon" type="hidden" value="31.0909" />
           <input id="elev" type="hidden" />
           <input id="tz" type="hidden" />
-          <label>
-            Panel tilt (°)
-            <input id="tilt" type="number" step="1" value="30" />
+          <label for="tilt">
+            Panel tilt (°) <span class="required">*</span>
+            <input id="tilt" type="number" step="1" min="0" max="90" value="30" required 
+                   aria-describedby="tilt-help" aria-label="Panel tilt angle in degrees" />
+            <small id="tilt-help" class="help-text">Angle of your solar panels (0° = flat, 90° = vertical)</small>
           </label>
-          <label>
-            Panel wattage (W)
-            <input id="panelWatt" type="number" step="1" value="400" />
+          <label for="panelWatt">
+            Panel wattage (W) <span class="required">*</span>
+            <input id="panelWatt" type="number" step="1" min="1" max="10000" value="400" required 
+                   aria-describedby="panelWatt-help" aria-label="Panel wattage in watts" />
+            <small id="panelWatt-help" class="help-text">Power rating of each solar panel</small>
           </label>
-          <label>
-            Panel count
-            <input id="panelCount" type="number" step="1" value="1" />
+          <label for="panelCount">
+            Panel count <span class="required">*</span>
+            <input id="panelCount" type="number" step="1" min="1" max="1000" value="1" required 
+                   aria-describedby="panelCount-help" aria-label="Number of solar panels" />
+            <small id="panelCount-help" class="help-text">Total number of solar panels</small>
           </label>
           <div>
             <div class="muted" style="margin-bottom:6px;">Panel direction</div>
-            <div id="azBtns" class="az-grid">
-              <button type="button" data-az="0" class="active">N</button>
-              <button type="button" data-az="45">NE</button>
-              <button type="button" data-az="90">E</button>
-              <button type="button" data-az="135">SE</button>
-              <button type="button" data-az="180">S</button>
-              <button type="button" data-az="225">SW</button>
-              <button type="button" data-az="270">W</button>
-              <button type="button" data-az="315">NW</button>
+            <div id="azBtns" class="az-grid" role="radiogroup" aria-label="Panel direction selection">
+              <button type="button" data-az="0" class="active" aria-label="North (0°)" title="North (0°)">N</button>
+              <button type="button" data-az="45" aria-label="Northeast (45°)" title="Northeast (45°)">NE</button>
+              <button type="button" data-az="90" aria-label="East (90°)" title="East (90°)">E</button>
+              <button type="button" data-az="135" aria-label="Southeast (135°)" title="Southeast (135°)">SE</button>
+              <button type="button" data-az="180" aria-label="South (180°)" title="South (180°)">S</button>
+              <button type="button" data-az="225" aria-label="Southwest (225°)" title="Southwest (225°)">SW</button>
+              <button type="button" data-az="270" aria-label="West (270°)" title="West (270°)">W</button>
+              <button type="button" data-az="315" aria-label="Northwest (315°)" title="Northwest (315°)">NW</button>
             </div>
             <input id="az" type="hidden" value="0" />
             <small class="muted">Tip: In the southern hemisphere, point North (0°). In the northern hemisphere, point South (180°).</small>
           </div>
         </div>
         <div class="grid" style="grid-template-columns: repeat(6, 1fr); margin-top: 8px; align-items: end;">
-          <label>
+          <label for="date">
             Date
-            <input id="date" type="date" />
+            <input id="date" type="date" aria-label="Select date for solar calculations" />
           </label>
           <div style="display:flex; gap:8px; align-items: center;">
-            <button id="runBtn">Compute</button>
-            <button id="csvBtn" title="Download CSV">Export CSV</button>
-            <button id="shareBtn" title="Copy link with current settings">Share Link</button>
-            <label class="muted" style="display:flex; align-items:center; gap:6px; margin:0;">
-              <input id="tableToggle" type="checkbox" /> Show hourly table
+            <button id="runBtn" type="button" aria-label="Calculate solar irradiance">Compute</button>
+            <button id="csvBtn" type="button" title="Download CSV" aria-label="Export data as CSV file">Export CSV</button>
+            <button id="shareBtn" type="button" title="Copy link with current settings" aria-label="Share current settings">Share Link</button>
+            <label class="muted" style="display:flex; align-items:center; gap:6px; margin:0;" for="tableToggle">
+              <input id="tableToggle" type="checkbox" aria-label="Show hourly data table" /> Show hourly table
             </label>
           </div>
         </div>

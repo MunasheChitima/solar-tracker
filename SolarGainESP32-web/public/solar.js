@@ -93,11 +93,11 @@ export function computeDay({ lat, lon, elev, tz, tilt, az, date, hourlyCloudCove
       const dhi = dhiFromDni(dni);
       const tiltWm2 = tiltedIrradiance(dni, dhi, el, azSun, tilt, az, elev);
       // Apply hourly cloud factor (0-100% cloud → 0.2-1.0 factor)
-      const cloudCover = hourlyCloudCover[i] || 0;
+      const cloudCover = hourlyCloudCover[h] || 0;
       const cloudFactor = Math.max(0.2, Math.min(1, Math.pow(1 - cloudCover/100, 1.2)));
       irrKwh = (tiltWm2 / 1000.0) * cloudFactor;
     }
-    hourly.push({ hour: h, irr: irrKwh, cloudCover: hourlyCloudCover[i] || 0 });
+    hourly.push({ hour: h, irr: irrKwh, cloudCover: hourlyCloudCover[h] || 0 });
     total += irrKwh;
   }
 
