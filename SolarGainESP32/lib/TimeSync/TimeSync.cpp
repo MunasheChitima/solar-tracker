@@ -1,6 +1,6 @@
 #include "TimeSync.h"
 
-TimeSync::TimeSync() : timeClient(nullptr), initialized(false), timezoneOffset(2) {
+TimeSync::TimeSync() : timeClient(nullptr), initialized(false), timezoneOffset(2), lastFiredDay(-1), lastFiredMinute(-1) {
 }
 
 TimeSync::~TimeSync() {
@@ -118,6 +118,15 @@ bool TimeSync::isScheduledTime(int targetHour, int targetMinute) {
     
     int currentHour = getHour();
     int currentMinute = getMinute();
-    
-    return (currentHour == targetHour && currentMinute == targetMinute);
+
+    if (currentHour == targetHour && currentMinute == targetMinute) {
+        int d = getDay();
+        if (lastFiredDay == d && lastFiredMinute == currentMinute) {
+            return false; // already fired this minute
+        }
+        lastFiredDay = d;
+        lastFiredMinute = currentMinute;
+        return true;
+    }
+    return false;
 }

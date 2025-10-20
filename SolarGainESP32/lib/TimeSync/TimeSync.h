@@ -13,6 +13,8 @@ private:
     NTPClient* timeClient;
     int timezoneOffset;
     bool initialized;
+    int lastFiredDay;
+    int lastFiredMinute;
     
 public:
     TimeSync();

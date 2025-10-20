@@ -22,8 +22,8 @@ void Display::begin() {
     chartY = 50;
     chartWidth = screenWidth - 40;
     chartHeight = screenHeight - 100;
-    barWidth = (chartWidth - 23 * 2) / 24; // 24 hours with spacing
     barSpacing = 2;
+    barWidth = (chartWidth - (24 - 1) * barSpacing) / 24; // derive from spacing
     
     // Set default font
     tft.setTextSize(1);

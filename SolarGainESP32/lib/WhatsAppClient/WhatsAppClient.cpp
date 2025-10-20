@@ -106,36 +106,33 @@ bool WhatsAppClient::sendMessage(const String& message) {
     }
     
     WiFiClientSecure client;
-    client.setInsecure(); // For simplicity, skip certificate validation
-    
+    // TODO: provide CA certificate for graph.facebook.com; fallback to insecure only if explicitly allowed
+    #ifdef USE_INSECURE_TLS
+      client.setInsecure();
+    #else
+      #ifdef FB_ROOT_CA_PEM
+        client.setCACert(FB_ROOT_CA_PEM);
+      #else
+        client.setInsecure(); // Fallback until CA is provisioned
+      #endif
+    #endif
+
     HTTPClient https;
-    
     String url = buildApiUrl();
-    
-    if (!https.begin(client, url)) {
-        Serial.println("Failed to connect to WhatsApp Business API");
-        return false;
-    }
-    
-    // Set headers
-    https.addHeader("Authorization", "Bearer " + accessToken);
-    https.addHeader("Content-Type", "application/json");
-    
-    // Build JSON payload
-    String payload = buildMessagePayload(recipientNumber, message);
-    
-    Serial.println("Sending WhatsApp message...");
-    Serial.println("URL: " + url);
-    
-    int httpCode = https.POST(payload);
-    
-    if (httpCode > 0) {
+
+    bool success = false;
+    if (https.begin(client, url)) {
+        https.addHeader("Authorization", "Bearer " + accessToken);
+        https.addHeader("Content-Type", "application/json");
+
+        String payload = buildMessagePayload(recipientNumber, message);
+        Serial.println("Sending WhatsApp message...");
+
+        int httpCode = https.POST(payload);
         String response = https.getString();
         Serial.println("HTTP Response code: " + String(httpCode));
-        
+
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_CREATED) {
-            Serial.println("Message sent successfully!");
-            
             // Parse response to check for message ID
             StaticJsonDocument<512> responseDoc;
             if (deserializeJson(responseDoc, response) == DeserializationError::Ok) {
@@ -144,30 +141,19 @@ bool WhatsAppClient::sendMessage(const String& message) {
                     Serial.println("Message ID: " + messageId);
                 }
             }
-            
-            return true;
+            success = true;
+        } else if (httpCode > 0) {
+            // Log concise error
+            Serial.println("Failed to send message. HTTP " + String(httpCode));
         } else {
-            Serial.println("Failed to send message. Response: " + response);
-            
-            // Parse error response
-            StaticJsonDocument<512> errorDoc;
-            if (deserializeJson(errorDoc, response) == DeserializationError::Ok) {
-                if (errorDoc.containsKey("error")) {
-                    String errorMessage = errorDoc["error"]["message"].as<String>();
-                    int errorCode = errorDoc["error"]["code"];
-                    Serial.println("Error " + String(errorCode) + ": " + errorMessage);
-                }
-            }
-            
-            return false;
+            Serial.println("HTTP POST failed, error: " + https.errorToString(httpCode));
         }
+        https.end();
     } else {
-        Serial.println("HTTP POST failed, error: " + https.errorToString(httpCode));
-        return false;
+        Serial.println("Failed to connect to WhatsApp Business API");
     }
-    
-    https.end();
-    return false;
+
+    return success;
 }
 
 bool WhatsAppClient::sendDailyForecast(const DailyForecast& forecast, const String& location) {
@@ -182,43 +168,39 @@ bool WhatsAppClient::testConnection() {
     }
     
     WiFiClientSecure client;
-    client.setInsecure();
-    
+    #ifdef USE_INSECURE_TLS
+      client.setInsecure();
+    #else
+      #ifdef FB_ROOT_CA_PEM
+        client.setCACert(FB_ROOT_CA_PEM);
+      #else
+        client.setInsecure();
+      #endif
+    #endif
+
     HTTPClient https;
-    
-    // Test endpoint to get phone number details
     String url = String("https://") + apiHost + "/" + apiVersion + "/" + phoneNumberId;
-    
-    if (!https.begin(client, url)) {
-        Serial.println("Failed to connect to WhatsApp Business API");
-        return false;
-    }
-    
-    https.addHeader("Authorization", "Bearer " + accessToken);
-    
-    int httpCode = https.GET();
-    
-    if (httpCode == HTTP_CODE_OK) {
-        String response = https.getString();
-        Serial.println("WhatsApp Business API connection test successful!");
-        
-        // Parse response to show phone number details
-        StaticJsonDocument<512> doc;
-        if (deserializeJson(doc, response) == DeserializationError::Ok) {
-            if (doc.containsKey("display_phone_number")) {
-                String displayNumber = doc["display_phone_number"].as<String>();
-                Serial.println("Connected phone number: " + displayNumber);
+
+    bool ok = false;
+    if (https.begin(client, url)) {
+        https.addHeader("Authorization", "Bearer " + accessToken);
+        int httpCode = https.GET();
+        if (httpCode == HTTP_CODE_OK) {
+            String response = https.getString();
+            StaticJsonDocument<512> doc;
+            if (deserializeJson(doc, response) == DeserializationError::Ok) {
+                if (doc.containsKey("display_phone_number")) {
+                    String displayNumber = doc["display_phone_number"].as<String>();
+                    Serial.println("Connected phone number: " + displayNumber);
+                }
             }
+            ok = true;
+        } else {
+            Serial.println("WhatsApp Business API connection test failed. HTTP code: " + String(httpCode));
         }
-        
         https.end();
-        return true;
     } else {
-        Serial.println("WhatsApp Business API connection test failed. HTTP code: " + String(httpCode));
-        if (httpCode > 0) {
-            Serial.println("Response: " + https.getString());
-        }
-        https.end();
-        return false;
+        Serial.println("Failed to connect to WhatsApp Business API");
     }
+    return ok;
 }

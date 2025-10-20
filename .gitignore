@@ -1,3 +1,17 @@
+# Local secrets and environment files
+SolarGainESP32/data/config.json
+.pio/
+SolarGainESP32/
+.env
+.env.*
+SolarGainESP32-web/.env
+
+# Node modules (already present but ensure ignored by default tools)
+SolarGainESP32-web/node_modules/
+
+# PlatformIO build artifacts
+.pio/
+
 # Dependencies
 node_modules/
 npm-debug.log*

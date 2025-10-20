@@ -82,7 +82,7 @@ export function computeDay({ lat, lon, elev, tz, tilt, az, date, hourlyCloudCove
   const hourly = [];
   for (let h = 0; h < 24; h++) {
     const local = h + 0.5; // mid hour
-    const solarTime = local + eot / 60 + lon / 15 - tz; // adjust to true solar time
+    const solarTime = local + eot / 60 + lon / 15; // parity with firmware: no timezone subtraction
     const ha = hourAngle(solarTime);
     const el = solarElevation(latRad, dec, ha);
     let irrKwh = 0;

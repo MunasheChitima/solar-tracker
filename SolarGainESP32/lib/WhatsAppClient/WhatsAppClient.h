@@ -5,6 +5,7 @@
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include "../SolarCalc/SolarCalc.h"
+#include "FBRootCA.h"
 
 class WhatsAppClient {
 private:

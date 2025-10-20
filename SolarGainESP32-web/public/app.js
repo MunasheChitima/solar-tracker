@@ -1,8 +1,6 @@
 import { computeDay } from './solar.js';
 
 // Weather provider: Open‑Meteo (free, no key)
-// Note: We keep the OpenWeather key around for future use, but the app now uses Open‑Meteo for reliability.
-const OPENWEATHER_KEY = '67cb63777fedba30497503a6f8d4ceed';
 
 const els = {
   address: document.getElementById('address'),
@@ -338,23 +336,25 @@ async function currentParams() {
   // Timezone: automatic from selected coordinates
   let tzOffset = tz;
   try {
-    const tzRes = await fetch(`/api/timezone?lat=${lat}&lon=${lon}`);
+    const dStr = date.toISOString().slice(0,10);
+    const tzRes = await fetch(`/api/timezone?lat=${lat}&lon=${lon}&date=${dStr}`);
     if (tzRes.ok) {
       const tzJson = await tzRes.json();
       const rawOff = tzJson.rawOffset || 0;
       const dstOff = tzJson.dstOffset || 0;
-      const total = rawOff + dstOff;
-      tzOffset = Math.round(total / 3600);
+      const total = rawOff + dstOff; // seconds
+      tzOffset = total; // keep seconds precision
     } else {
-      // Fallback when service responds with an error (e.g., missing API key)
-      tzOffset = Math.round(lon / 15);
+      showError('Timezone lookup failed; using approximate solar time');
+      tzOffset = 0;
     }
   } catch (e) {
     console.warn('Timezone API failed:', e.message);
-    tzOffset = Math.round(lon / 15); // rough estimate
+    showError('Timezone lookup failed; using approximate solar time');
+    tzOffset = 0;
   }
   
-  if (els.tz) els.tz.value = tzOffset;
+  if (els.tz) els.tz.value = tzOffset; // seconds
   if (els.lat) els.lat.value = String(lat);
   if (els.lon) els.lon.value = String(lon);
   
@@ -466,23 +466,20 @@ async function run() {
         const systemKw = Math.max(0, (p.panelWatt * p.panelCount) / 1000);
         const performanceRatio = 0.8;
         
-        for (let i = 0; i < 7; i++) {
-          const day = new Date(baseDate);
-          day.setUTCDate(baseDate.getUTCDate() + i);
-          const dStr = day.toISOString().slice(0,10);
-          let hhCloud = [];
-          
-          try {
-            const resWx = await fetch(`/api/weather?lat=${p.lat}&lon=${p.lon}&date=${dStr}`);
-            if (resWx.ok) {
-              const j = await resWx.json();
-              const hh = j?.hourly || {};
-              hhCloud = (hh.cloud_cover || []).map(v => (typeof v === 'number' ? Math.round(v) : 0));
-            }
-          } catch (e) {
-            console.warn(`Weather fetch failed for ${dStr}:`, e.message);
-          }
-          
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(baseDate);
+          d.setUTCDate(baseDate.getUTCDate() + i);
+          return d;
+        });
+        const dayStrs = days.map(d => d.toISOString().slice(0,10));
+        const responses = await Promise.all(dayStrs.map(dStr => fetch(`/api/weather?lat=${p.lat}&lon=${p.lon}&date=${dStr}`)));
+        const payloads = await Promise.all(responses.map(r => r.ok ? r.json() : null));
+
+        for (let i = 0; i < days.length; i++) {
+          const day = days[i];
+          const j = payloads[i];
+          const hh = j?.hourly || {};
+          const hhCloud = (hh.cloud_cover || []).map(v => (typeof v === 'number' ? Math.round(v) : 0));
           const dayRes = computeDay({ lat: p.lat, lon: p.lon, elev: p.elev, tz: p.tz, tilt: p.tilt, az: p.az, date: day, hourlyCloudCover: hhCloud });
           const kwhm2 = dayRes.total;
           const panelKwh = kwhm2 * systemKw * performanceRatio;
@@ -764,6 +761,7 @@ initFromQuery();
 // Address suggestions (debounced)
 let addrTimer;
 if (els.address) {
+  let activeIndex = -1;
   const debouncedAddressSearch = debounce(async (query) => {
     try {
       const res = await fetch(`/api/places/autocomplete?q=${encodeURIComponent(query)}`);
@@ -777,9 +775,12 @@ if (els.address) {
         }
         
         const preds = Array.isArray(data.predictions) ? data.predictions : [];
-        preds.forEach(item => {
+        activeIndex = -1;
+        preds.forEach((item, idx) => {
           const b = safeCreateElement('button', '', item.description);
           b.type = 'button';
+          b.setAttribute('role', 'option');
+          b.setAttribute('aria-selected', 'false');
           b.addEventListener('click', async () => {
             if (els.address) els.address.value = item.description;
             if (els.addrConfirm) els.addrConfirm.textContent = `Using: ${item.description}`;
@@ -808,6 +809,11 @@ if (els.address) {
             // Only run after address is confirmed
             saveSettings();
             run();
+          });
+          b.addEventListener('mousemove', () => {
+            [...els.addrSuggest.children].forEach(c => c.setAttribute('aria-selected','false'));
+            b.setAttribute('aria-selected','true');
+            activeIndex = idx;
           });
           els.addrSuggest.appendChild(b);
         });
@@ -907,7 +913,28 @@ if (els.address) {
   els.address.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      resolveAndRunFromAddress();
+      const items = els.addrSuggest ? [...els.addrSuggest.children] : [];
+      if (items.length && activeIndex >= 0 && activeIndex < items.length) {
+        items[activeIndex].click();
+      } else {
+        resolveAndRunFromAddress();
+      }
+    } else if (e.key === 'ArrowDown') {
+      const items = els.addrSuggest ? [...els.addrSuggest.children] : [];
+      if (!items.length) return;
+      activeIndex = Math.min(items.length - 1, activeIndex + 1);
+      items.forEach(el => el.setAttribute('aria-selected','false'));
+      items[activeIndex].setAttribute('aria-selected','true');
+      e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+      const items = els.addrSuggest ? [...els.addrSuggest.children] : [];
+      if (!items.length) return;
+      activeIndex = Math.max(0, activeIndex - 1);
+      items.forEach(el => el.setAttribute('aria-selected','false'));
+      items[activeIndex].setAttribute('aria-selected','true');
+      e.preventDefault();
+    } else if (e.key === 'Escape') {
+      if (els.addrSuggest) els.addrSuggest.style.display = 'none';
     }
   });
   
