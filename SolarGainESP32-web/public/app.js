@@ -31,6 +31,7 @@ const els = {
 
 let chart;
 let errorContainer;
+let runSeq = 0; // guards against concurrent run() executions appending twice
 
 // Error handling and user feedback system
 function createErrorContainer() {
@@ -368,6 +369,7 @@ async function run() {
   
   document.body.classList.add('loading');
   let p;
+  const myRun = ++runSeq;
   
   try {
     p = await currentParams();
@@ -474,6 +476,11 @@ async function run() {
         const dayStrs = days.map(d => d.toISOString().slice(0,10));
         const responses = await Promise.all(dayStrs.map(dStr => fetch(`/api/weather?lat=${p.lat}&lon=${p.lon}&date=${dStr}`)));
         const payloads = await Promise.all(responses.map(r => r.ok ? r.json() : null));
+
+        // Abort if a newer run started while we were fetching
+        if (myRun !== runSeq) {
+          return;
+        }
 
         for (let i = 0; i < days.length; i++) {
           const day = days[i];
