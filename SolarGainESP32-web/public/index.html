@@ -13,14 +13,62 @@
   <body>
     <div class="topbar"></div>
     <header class="header">
-      <div class="container">
-        <h1>SolarGain Dashboard</h1>
-        <p>Hourly irradiance forecast and daily total</p>
+      <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1>☀️ SolarGain Dashboard</h1>
+          <p>Easy solar energy forecasting for everyone</p>
+        </div>
+        <button type="button" onclick="toggleGettingStarted()" style="background: #f59e0b; color: white; padding: 10px 20px; border-radius: 8px; font-size: 15px; border: none; cursor: pointer; white-space: nowrap;">
+          📚 Help Guide
+        </button>
       </div>
     </header>
 
     <main class="container">
-      <section class="controls">
+      <!-- Getting Started Guide (Collapsible) -->
+      <section class="getting-started card" id="gettingStarted">
+        <h2>
+          <span>📚</span>
+          <span>How to Use This Tool</span>
+          <button type="button" onclick="toggleGettingStarted()" style="margin-left: auto; background: #78350f; padding: 8px 16px; font-size: 14px;">
+            Hide Guide
+          </button>
+        </h2>
+        <div class="getting-started-steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Enter Your Location</h3>
+              <p>Type your address in the field below and select from the suggestions. This helps us get accurate weather and sun position data for your area.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Configure Your Solar Setup</h3>
+              <p>Tell us about your solar panels: how many you have, their power rating, and which direction they face. Don't worry if you're not sure—you can use the default values to start.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Click "Compute" Button</h3>
+              <p>Once you've entered your information, click the big "Compute" button below. The tool will calculate how much solar energy you can expect for the day.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h3>View Your Results</h3>
+              <p>Scroll down to see your forecast! You'll get hourly predictions, battery charge estimates, and a 7-day outlook. You can also export the data or share your results.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="main-with-sidebar">
+        <div class="main-content">
+          <section class="controls">
         <div class="grid">
           <label style="grid-column: span 3; position: relative;" for="address">
             Address (start typing and choose)
@@ -35,37 +83,37 @@
           <input id="elev" type="hidden" />
           <input id="tz" type="hidden" />
           <label for="tilt">
-            Panel tilt (°) <span class="required">*</span>
-            <input id="tilt" type="number" step="1" min="0" max="90" value="30" required 
+            Panel Tilt Angle (°) <span class="required">*</span>
+            <input id="tilt" type="number" step="1" min="0" max="90" value="30" required
                    aria-describedby="tilt-help" aria-label="Panel tilt angle in degrees" />
-            <small id="tilt-help" class="help-text">Angle of your solar panels (0° = flat, 90° = vertical)</small>
+            <small id="tilt-help" class="help-text">The angle your panels face the sky. 0° is flat, 90° is vertical. Try 30° to start.</small>
           </label>
           <label for="panelWatt">
-            Panel wattage (W) <span class="required">*</span>
-            <input id="panelWatt" type="number" step="1" min="1" max="10000" value="400" required 
+            Panel Power Rating (Watts) <span class="required">*</span>
+            <input id="panelWatt" type="number" step="1" min="1" max="10000" value="400" required
                    aria-describedby="panelWatt-help" aria-label="Panel wattage in watts" />
-            <small id="panelWatt-help" class="help-text">Power rating of each solar panel</small>
+            <small id="panelWatt-help" class="help-text">Check your panel label for power rating. Common values: 250W, 300W, 400W.</small>
           </label>
           <label for="panelCount">
-            Panel count <span class="required">*</span>
-            <input id="panelCount" type="number" step="1" min="1" max="1000" value="1" required 
+            Number of Panels <span class="required">*</span>
+            <input id="panelCount" type="number" step="1" min="1" max="1000" value="1" required
                    aria-describedby="panelCount-help" aria-label="Number of solar panels" />
-            <small id="panelCount-help" class="help-text">Total number of solar panels</small>
+            <small id="panelCount-help" class="help-text">How many solar panels do you have installed?</small>
           </label>
           <label for="batteryAh">
-            Battery capacity (Ah)
-            <input id="batteryAh" type="number" step="0.1" min="1" max="10000" value="100" 
+            Battery Capacity (Amp-hours)
+            <input id="batteryAh" type="number" step="0.1" min="1" max="10000" value="100"
                    aria-describedby="batteryAh-help" aria-label="Battery capacity in amp-hours" />
-            <small id="batteryAh-help" class="help-text">e.g., 100 Ah</small>
+            <small id="batteryAh-help" class="help-text">Optional: Found on your battery label (e.g., 100Ah, 200Ah).</small>
           </label>
           <label for="batteryV">
-            Battery voltage (V)
-            <input id="batteryV" type="number" step="0.1" min="1" max="1000" value="52.5" 
+            Battery Voltage (Volts)
+            <input id="batteryV" type="number" step="0.1" min="1" max="1000" value="52.5"
                    aria-describedby="batteryV-help" aria-label="Nominal battery voltage in volts" />
-            <small id="batteryV-help" class="help-text">e.g., 52.5 V</small>
+            <small id="batteryV-help" class="help-text">Optional: Common values are 12V, 24V, 48V, or 52V.</small>
           </label>
           <div>
-            <div class="muted" style="margin-bottom:6px;">Panel direction</div>
+            <div style="font-weight: 600; margin-bottom: 10px; color: var(--text); font-size: 15px;">Which Direction Do Your Panels Face? 🧭</div>
             <div id="azBtns" class="az-grid" role="radiogroup" aria-label="Panel direction selection">
               <button type="button" data-az="0" class="active" aria-label="North (0°)" title="North (0°)">N</button>
               <button type="button" data-az="45" aria-label="Northeast (45°)" title="Northeast (45°)">NE</button>
@@ -77,22 +125,40 @@
               <button type="button" data-az="315" aria-label="Northwest (315°)" title="Northwest (315°)">NW</button>
             </div>
             <input id="az" type="hidden" value="0" />
-            <small class="muted">Tip: In the southern hemisphere, point North (0°). In the northern hemisphere, point South (180°).</small>
+            <small class="help-text"><strong>Tip:</strong> In Zimbabwe and other southern hemisphere countries, choose North (N) for maximum sun. In northern countries, choose South (S).</small>
           </div>
         </div>
         <div class="grid" style="grid-template-columns: repeat(6, 1fr); margin-top: 8px; align-items: end;">
           <label for="date">
-            Date
+            Select Date
             <input id="date" type="date" aria-label="Select date for solar calculations" />
+            <small class="help-text">Choose which day you want to forecast. Defaults to today.</small>
           </label>
-          <div style="display:flex; gap:8px; align-items: center;">
-            <button id="runBtn" type="button" aria-label="Calculate solar irradiance">Compute</button>
-            <button id="csvBtn" type="button" title="Download CSV" aria-label="Export data as CSV file">Export CSV</button>
-            <button id="shareBtn" type="button" title="Copy link with current settings" aria-label="Share current settings">Share Link</button>
-            <label class="muted" style="display:flex; align-items:center; gap:6px; margin:0;" for="tableToggle">
-              <input id="tableToggle" type="checkbox" aria-label="Show hourly data table" /> Show hourly table
+        </div>
+
+        <!-- Action Buttons Section -->
+        <div style="background: #f9fafb; padding: 20px; border-radius: 12px; border: 2px solid var(--border); margin-top: 24px;">
+          <h3 style="margin: 0 0 16px 0; font-size: 18px;">Ready to Calculate?</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <button id="runBtn" type="button" aria-label="Calculate solar irradiance" style="background: #f59e0b; font-size: 18px; padding: 16px;">
+              ⚡ Calculate Now
+            </button>
+            <button id="csvBtn" type="button" title="Download your results as a spreadsheet" aria-label="Export data as CSV file" style="background: white; color: var(--text); border: 2px solid var(--border);">
+              📥 Download Results
+            </button>
+            <button id="shareBtn" type="button" title="Get a link to share your settings" aria-label="Share current settings" style="background: white; color: var(--text); border: 2px solid var(--border);">
+              🔗 Share Settings
+            </button>
+          </div>
+          <div style="margin-top: 16px;">
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer;" for="tableToggle">
+              <input id="tableToggle" type="checkbox" aria-label="Show hourly data table" style="width: 20px; height: 20px;" />
+              <span>Show detailed hourly data table</span>
             </label>
           </div>
+        </div>
+
+        <div style="height: 1px;">
         </div>
       </section>
 
@@ -166,24 +232,85 @@
         </table>
       </section>
 
-      <section class="card" id="equiv">
-        <h3>What can this power?</h3>
-        <p class="muted">Based on your daily kWh/m², here are simple examples.</p>
-        <ul id="equivList"></ul>
-      </section>
+      <!-- Ad Placement: Between Results and Tips -->
+      <div class="between-content-ad ad-container">
+        <div class="ad-label">Advertisement</div>
+        <div class="ad-placeholder">
+          [300x250 Ad Space]
+        </div>
+      </div>
 
-      
+      <section class="card" id="equiv">
+        <h3>⚡ What can this power?</h3>
+        <p class="muted">Based on your system's daily output, here are simple examples of what you could power:</p>
+        <ul id="equivList"></ul>
+
+        <!-- Disclaimer Box -->
+        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin-top: 20px; border-radius: 6px;">
+          <strong style="color: #92400e; display: block; margin-bottom: 8px;">⚠️ Important Note:</strong>
+          <p style="margin: 0 0 8px 0; color: #78350f; font-size: 14px;">These estimates assume ideal conditions. Real-world usable power is typically <strong>20-35% lower</strong> due to:</p>
+          <ul style="margin: 0; padding-left: 20px; color: #78350f; font-size: 14px;">
+            <li>Battery charging losses (10-20%)</li>
+            <li>Inverter conversion losses (5-15%)</li>
+            <li>Cable resistance (2-5%)</li>
+            <li>Temperature effects and dust</li>
+          </ul>
+        </div>
+      </section>
 
 
       <section class="card" id="tips">
-        <h3>Installation Tips</h3>
-        <ul>
+        <h3>💡 Installation Tips</h3>
+        <ul style="font-size: 15px; line-height: 1.8;">
           <li>Clean panels monthly for best performance</li>
-          <li>Check for shading from trees or buildings</li>
-          <li>Consider battery storage for night use</li>
-          <li>Monitor actual vs predicted output</li>
+          <li>Check for shading from trees or buildings throughout the day</li>
+          <li>Consider battery storage for night use and power outages</li>
+          <li>Monitor actual vs predicted output to identify issues</li>
+          <li>Ensure proper ventilation around panels to prevent overheating</li>
         </ul>
       </section>
+
+        </div><!-- Close main-content -->
+
+        <!-- Sidebar with Ads (Desktop Only) -->
+        <aside class="sidebar">
+          <!-- Sidebar Ad 1 -->
+          <div class="sidebar-ad">
+            <div class="ad-label">Advertisement</div>
+            <div class="ad-placeholder" style="margin-top: 12px;">
+              [300x250 Ad Space]
+            </div>
+          </div>
+
+          <!-- Quick Tips Card -->
+          <div class="card" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #3b82f6;">
+            <h3 style="font-size: 18px; margin: 0 0 12px 0;">💡 Pro Tip</h3>
+            <p style="font-size: 14px; margin: 0; line-height: 1.6;">
+              For best results in the Southern Hemisphere (like Zimbabwe), point your panels North at a tilt angle equal to your latitude (about 15-20°).
+            </p>
+          </div>
+
+          <!-- Sidebar Ad 2 -->
+          <div class="sidebar-ad">
+            <div class="ad-label">Advertisement</div>
+            <div class="ad-placeholder" style="margin-top: 12px;">
+              [300x250 Ad Space]
+            </div>
+          </div>
+        </aside>
+
+      </div><!-- Close main-with-sidebar -->
+
+      <!-- Footer Ad -->
+      <div class="footer-ad">
+        <div style="text-align: center;">
+          <div class="ad-label">Advertisement</div>
+          <div class="ad-placeholder" style="margin-top: 8px;">
+            [728x90 Leaderboard Ad]
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <footer class="footer">

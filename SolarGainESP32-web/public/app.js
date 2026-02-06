@@ -1139,3 +1139,34 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+
+// Toggle Getting Started guide
+window.toggleGettingStarted = function() {
+  const guide = document.getElementById('gettingStarted');
+  const btn = guide?.querySelector('button');
+
+  if (guide && btn) {
+    if (guide.style.display === 'none') {
+      guide.style.display = 'block';
+      btn.textContent = 'Hide Guide';
+      localStorage.setItem('solargain_show_guide', 'true');
+    } else {
+      guide.style.display = 'none';
+      btn.textContent = 'Show Guide';
+      localStorage.setItem('solargain_show_guide', 'false');
+    }
+  }
+};
+
+// Check if user has hidden guide before
+window.addEventListener('load', () => {
+  const showGuide = localStorage.getItem('solargain_show_guide');
+  const guide = document.getElementById('gettingStarted');
+  const btn = guide?.querySelector('button');
+
+  // For new users, show the guide. For returning users, respect their preference
+  if (showGuide === 'false' && guide && btn) {
+    guide.style.display = 'none';
+    btn.textContent = 'Show Guide';
+  }
+});
