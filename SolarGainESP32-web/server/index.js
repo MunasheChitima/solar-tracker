@@ -264,8 +264,14 @@ const __dirname = path.dirname(__filename);
 const publicDir = path.resolve(__dirname, '../public');
 app.use('/', express.static(publicDir));
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
+// Vercel runs this file as a serverless function and expects a default export.
+// Local / non-Vercel runs use a normal HTTP listener.
+const isVercel = process.env.VERCEL === '1';
 
+if (!isVercel) {
+  app.listen(PORT, () => {
+    console.log(`Server listening on http://localhost:${PORT}`);
+  });
+}
 
+export default app;
