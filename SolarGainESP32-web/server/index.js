@@ -188,7 +188,39 @@ app.get('/api/timezone', async (req, res) => {
   }
 });
 
-// (Removed) Google Solar API endpoint
+// --- Google Solar API: Building Insights ---
+// Returns roof solar potential for a given lat/lon (max panel count, panel size,
+// yearly energy, sunshine hours). Uses buildingInsights:findClosest.
+app.get('/api/solar/building-insights', async (req, res) => {
+  try {
+    const lat = req.query.lat;
+    const lon = req.query.lon;
+    if (!validateCoordinates(lat, lon)) {
+      return res.status(400).json({ error: 'Invalid coordinates provided' });
+    }
+    if (!GOOGLE_KEY) return res.status(500).json({ error: 'Missing GOOGLE_MAPS_API_KEY' });
+
+    const quality = (req.query.quality || 'HIGH').toString().toUpperCase();
+    const allowedQuality = new Set(['HIGH', 'MEDIUM', 'LOW']);
+    const requiredQuality = allowedQuality.has(quality) ? quality : 'HIGH';
+
+    const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${lat}&location.longitude=${lon}&requiredQuality=${requiredQuality}&key=${GOOGLE_KEY}`;
+    const r = await fetch(url);
+    if (r.status === 404) {
+      return res.status(404).json({ error: 'no_coverage', details: 'This address is not yet covered by the Google Solar API.' });
+    }
+    if (!r.ok) {
+      const text = await r.text().catch(() => '');
+      console.warn('Solar API error', r.status, text);
+      return res.status(502).json({ error: 'solar_upstream_failed', status: r.status });
+    }
+    const j = await r.json();
+    return res.json(j);
+  } catch (e) {
+    console.error('Solar API error:', e);
+    return res.status(500).json({ error: 'solar_failed', details: 'Unable to fetch solar insights' });
+  }
+});
 
 // --- Weather proxy: Open-Meteo only (stable)
 app.get('/api/weather', async (req, res) => {

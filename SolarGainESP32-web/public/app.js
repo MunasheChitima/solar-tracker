@@ -1109,6 +1109,156 @@ async function tryGeolocate() {
   }, { enableHighAccuracy: true, timeout: 8000 });
 }
 
+// --- Roof Solar Potential (Google Solar API) ---
+const roofEls = {
+  btn: document.getElementById('roofEstimateBtn'),
+  applyBtn: document.getElementById('roofApplyBtn'),
+  quality: document.getElementById('roofQuality'),
+  status: document.getElementById('roofStatus'),
+  results: document.getElementById('roofResults'),
+  maxPanels: document.getElementById('roofMaxPanels'),
+  maxArea: document.getElementById('roofMaxArea'),
+  panelSize: document.getElementById('roofPanelSize'),
+  panelWatt: document.getElementById('roofPanelWatt'),
+  sunshine: document.getElementById('roofSunshine'),
+  yearly: document.getElementById('roofYearly'),
+  segments: document.getElementById('roofSegments'),
+  co2: document.getElementById('roofCO2'),
+  configSelect: document.getElementById('roofConfigSelect'),
+  addressLabel: document.getElementById('roofAddressLabel')
+};
+
+let lastRoofInsights = null;
+
+async function estimateRoofPotential() {
+  if (!roofEls.status || !roofEls.results) return;
+
+  const lat = parseFloat(els.lat?.value);
+  const lon = parseFloat(els.lon?.value);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    showError('Please confirm an address first.');
+    return;
+  }
+
+  const confirmed = els.addrConfirm?.textContent?.includes('Using:');
+  if (!confirmed) {
+    showError('Please select an address from the suggestions so we can look up your roof.');
+    return;
+  }
+
+  roofEls.results.style.display = 'none';
+  roofEls.status.textContent = 'Looking up roof with Google Solar API…';
+  if (roofEls.btn) roofEls.btn.disabled = true;
+  document.body.classList.add('loading');
+
+  try {
+    const quality = roofEls.quality?.value || 'HIGH';
+    const r = await fetch(`/api/solar/building-insights?lat=${lat}&lon=${lon}&quality=${encodeURIComponent(quality)}`);
+
+    if (r.status === 404) {
+      roofEls.status.textContent = 'This address is not yet covered by the Google Solar API. Try a different address or reduce the quality.';
+      return;
+    }
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      throw new Error(j.error || `HTTP ${r.status}`);
+    }
+
+    const data = await r.json();
+    lastRoofInsights = data;
+    renderRoofInsights(data);
+    roofEls.status.textContent = '';
+    roofEls.results.style.display = 'block';
+    showSuccess('Roof solar potential loaded.');
+  } catch (e) {
+    console.error('Roof estimate failed:', e);
+    roofEls.status.textContent = '';
+    showError('Unable to estimate roof potential. Please try again.');
+  } finally {
+    if (roofEls.btn) roofEls.btn.disabled = false;
+    document.body.classList.remove('loading');
+  }
+}
+
+function renderRoofInsights(data) {
+  const sp = data?.solarPotential || {};
+  const maxPanels = sp.maxArrayPanelsCount ?? 0;
+  const maxArea = sp.maxArrayAreaMeters2 ?? 0;
+  const panelH = sp.panelHeightMeters;
+  const panelW = sp.panelWidthMeters;
+  const panelWatt = sp.panelCapacityWatts;
+  const maxSun = sp.maxSunshineHoursPerYear;
+  const segments = Array.isArray(sp.roofSegmentStats) ? sp.roofSegmentStats.length : 0;
+  const co2Per = sp.carbonOffsetFactorKgPerMwh;
+
+  safeSetTextContent(roofEls.maxPanels, `${maxPanels.toLocaleString()}`);
+  safeSetTextContent(roofEls.maxArea, typeof maxArea === 'number' ? `${maxArea.toFixed(1)} m²` : '—');
+  safeSetTextContent(roofEls.panelSize,
+    (typeof panelH === 'number' && typeof panelW === 'number')
+      ? `${panelW.toFixed(2)} × ${panelH.toFixed(2)} m`
+      : '—');
+  safeSetTextContent(roofEls.panelWatt, typeof panelWatt === 'number' ? `${panelWatt} W` : '—');
+  safeSetTextContent(roofEls.sunshine, typeof maxSun === 'number' ? `${Math.round(maxSun).toLocaleString()} h/yr` : '—');
+  safeSetTextContent(roofEls.segments, segments ? `${segments}` : '—');
+
+  const configs = Array.isArray(sp.solarPanelConfigs) ? sp.solarPanelConfigs : [];
+  const fullConfig = configs.length ? configs[configs.length - 1] : null;
+  const fullYearlyKwh = fullConfig?.yearlyEnergyDcKwh;
+  safeSetTextContent(roofEls.yearly, typeof fullYearlyKwh === 'number'
+    ? `${Math.round(fullYearlyKwh).toLocaleString()} kWh`
+    : '—');
+
+  if (typeof fullYearlyKwh === 'number' && typeof co2Per === 'number') {
+    const kgCO2 = (fullYearlyKwh / 1000) * co2Per;
+    safeSetTextContent(roofEls.co2, `${Math.round(kgCO2).toLocaleString()} kg`);
+  } else {
+    safeSetTextContent(roofEls.co2, '—');
+  }
+
+  if (roofEls.configSelect) {
+    while (roofEls.configSelect.firstChild) {
+      roofEls.configSelect.removeChild(roofEls.configSelect.firstChild);
+    }
+    configs.forEach((cfg, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx);
+      const count = cfg.panelsCount ?? 0;
+      const kwh = typeof cfg.yearlyEnergyDcKwh === 'number' ? Math.round(cfg.yearlyEnergyDcKwh).toLocaleString() : '—';
+      opt.textContent = `${count} panels — ${kwh} kWh/yr`;
+      roofEls.configSelect.appendChild(opt);
+    });
+    if (configs.length) roofEls.configSelect.value = String(configs.length - 1);
+  }
+
+  const addr = data?.name || '';
+  safeSetTextContent(roofEls.addressLabel, addr ? `Building: ${addr}` : '');
+}
+
+function applyRoofConfig() {
+  if (!lastRoofInsights) {
+    showError('Run an estimate first.');
+    return;
+  }
+  const sp = lastRoofInsights.solarPotential || {};
+  const configs = Array.isArray(sp.solarPanelConfigs) ? sp.solarPanelConfigs : [];
+  const idx = parseInt(roofEls.configSelect?.value ?? '', 10);
+  const cfg = Number.isFinite(idx) && configs[idx] ? configs[idx] : configs[configs.length - 1];
+  if (!cfg) {
+    showError('No panel configuration available.');
+    return;
+  }
+  const count = cfg.panelsCount;
+  const watt = sp.panelCapacityWatts;
+  if (Number.isFinite(count) && els.panelCount) els.panelCount.value = String(count);
+  if (Number.isFinite(watt) && els.panelWatt) els.panelWatt.value = String(watt);
+  saveSettings();
+  run();
+  showSuccess(`Applied ${count} × ${watt}W panels to your system.`);
+}
+
+if (roofEls.btn) roofEls.btn.addEventListener('click', estimateRoofPotential);
+if (roofEls.applyBtn) roofEls.applyBtn.addEventListener('click', applyRoofConfig);
+
 // Add CSS for animations
 const style = document.createElement('style');
 style.textContent = `

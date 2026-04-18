@@ -166,6 +166,67 @@
         </table>
       </section>
 
+      <section class="card" id="roofPotential">
+        <h3>Roof Solar Potential</h3>
+        <p class="muted">Estimate how many solar panels your roof can fit using Google's Solar API (requires confirmed address). Coverage varies by location.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px;">
+          <button id="roofEstimateBtn" type="button" aria-label="Estimate roof solar potential">Estimate Roof Potential</button>
+          <label class="muted" style="display:flex; flex-direction:row; align-items:center; gap:6px; margin:0;" for="roofQuality">
+            Quality:
+            <select id="roofQuality" aria-label="Imagery quality">
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </label>
+        </div>
+        <div id="roofStatus" class="muted"></div>
+        <div id="roofResults" style="display:none;">
+          <div class="kpi" style="grid-template-columns: repeat(4, 1fr);">
+            <div>
+              <div class="kpi-label">Max Panels</div>
+              <div class="kpi-value" id="roofMaxPanels">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Max Array Area</div>
+              <div class="kpi-value" id="roofMaxArea">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Panel Size</div>
+              <div class="kpi-value" id="roofPanelSize">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Assumed Panel Wattage</div>
+              <div class="kpi-value" id="roofPanelWatt">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Max Sunshine</div>
+              <div class="kpi-value" id="roofSunshine">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Est. Yearly Energy (full roof)</div>
+              <div class="kpi-value" id="roofYearly">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">Roof Segments</div>
+              <div class="kpi-value" id="roofSegments">—</div>
+            </div>
+            <div>
+              <div class="kpi-label">CO₂ Offset / Year</div>
+              <div class="kpi-value" id="roofCO2">—</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <label for="roofConfigSelect" class="muted">Pick a panel configuration:</label>
+            <select id="roofConfigSelect" aria-label="Solar panel configuration" style="margin-top:6px;"></select>
+          </div>
+          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="roofApplyBtn" type="button" aria-label="Apply selected configuration to your system">Apply to my system</button>
+          </div>
+          <small class="muted" style="display:block; margin-top:8px;" id="roofAddressLabel"></small>
+        </div>
+      </section>
+
       <section class="card" id="equiv">
         <h3>What can this power?</h3>
         <p class="muted">Based on your daily kWh/m², here are simple examples.</p>
